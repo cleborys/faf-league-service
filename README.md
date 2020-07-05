@@ -17,17 +17,8 @@ Finally, you need to migrate the database manually once to define the new league
 To do so run
 ```
 docker cp league_table_migration.sql faf-db:.
-docker exec -it faf-db bash
+docker exec faf-db sh -c "mysql faf < league_table_migration.sql"
 ```
-The last step brings you to an interactive terminal inside `faf-db`.
-In there run
-```
-mysql faf < league_table_migration.sql
-exit
-```
-(There's probably a better way to run this in one command, but I didn't get it
-to find the correct file.)
-
 
 ## Setting up for development
 
