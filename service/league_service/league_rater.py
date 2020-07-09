@@ -19,6 +19,7 @@ class LeagueRater:
         player_rating: Rating,
     ):
         boost = 0
+        reduction = 0
         rating = player_rating[0] - 3 * player_rating[1]
         player_div = cls._get_player_division(current_score.division_id, league)
         # Highest divison has lowest id
@@ -28,8 +29,10 @@ class LeagueRater:
             if current_score.division_id is None:
                 return cls._do_placement(league, current_score, rating)
 
-            if rating > player_div.max_rating or rating < player_div.min_rating:
+            if rating > player_div.max_rating:
                 boost = 1
+            elif rating < player_div.min_rating:
+                reduction = 1
             # Linear interpolation of score and rating to have players in top division sorted by rating
             elif player_div.id == lowest_id and current_score.score < (player_div.highest_score - player_div.lowest_score) \
                     * (rating - player_div.min_rating) / (player_div.max_rating - player_div.min_rating):
@@ -38,7 +41,7 @@ class LeagueRater:
             if outcome == "VICTORY":
                 current_score.score += 1 + boost
             elif outcome == "DEFEAT":
-                current_score.score -= 1 + boost
+                current_score.score -= 1 + reduction
             if current_score.score < 0:
                 current_score.score = 0
 
