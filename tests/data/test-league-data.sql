@@ -17,7 +17,7 @@ INSERT INTO league_season_division (id, league_season_id, division_index, name_k
   (1, 1, 1, "name_key", "description_key", NULL, 150, 0, 10),
   (2, 1, 2, "name_key", "description_key", 150, NULL, NULL, NULL),
   (3, 2, 1, "name_key", "description_key", NULL, 100, 0, 10),
-  (4, 2, 2, "name_key", "description_key", 100, 200, ,0 10),
+  (4, 2, 2, "name_key", "description_key", 100, 200, 0, 10),
   (5, 2, 3, "name_key", "description_key", 200, NULL, NULL, NULL),
   (6, 3, 1, "name_key", "description_key", NULL, NULL, NULL, NULL);
 
