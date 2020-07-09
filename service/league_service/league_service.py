@@ -92,8 +92,8 @@ class LeagueService:
                     [
                         LeagueDivision(
                             row[league_season_division.c.id],
-                            row[league_season_division.c.from_mean],
-                            row[league_season_division.c.to_mean],
+                            row[league_season_division.c.min_rating],
+                            row[league_season_division.c.max_rating],
                             row[league_season_division.c.highest_score],
                         )
                         for row in division_list

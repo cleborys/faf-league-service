@@ -26,8 +26,9 @@ class GameOutcome(Enum):
 
 class LeagueDivision(NamedTuple):
     id: int
-    from_mean: float
-    to_mean: float
+    min_rating: float
+    max_rating: float
+    lowest_score: int
     highest_score: int
 
 

@@ -84,12 +84,12 @@ async def test_update_data(uninitialized_service):
     assert test_league.current_season_id == 2
     assert test_league.rating_type == "global"
     assert len(test_league.divisions) == 3
-    assert [division.from_mean for division in test_league.divisions] == [
+    assert [division.min_rating for division in test_league.divisions] == [
         None,
         100,
         200,
     ]
-    assert [division.to_mean for division in test_league.divisions] == [100, 200, None]
+    assert [division.max_rating for division in test_league.divisions] == [100, 200, None]
     assert [division.highest_score for division in test_league.divisions] == [
         10,
         10,
