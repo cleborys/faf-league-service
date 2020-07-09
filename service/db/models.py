@@ -57,8 +57,9 @@ league_season_division = Table(
     Column("id", Integer, primary_key=True),
     Column("league_season_id", Integer, ForeignKey("league_season.id")),
     Column("division_index", Integer),
-    Column("from_mean", Float),
-    Column("to_mean", Float),
+    Column("min_rating", Float),
+    Column("max_rating", Float),
+    Column("lowest_score", Integer),
     Column("highest_score", Integer),
 )
 
