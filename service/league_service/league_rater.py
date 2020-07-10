@@ -19,12 +19,8 @@ class LeagueRater:
         outcome: GameOutcome,
         player_rating: Rating,
     ):
-        boost = 0
-        reduction = 0
         rating = player_rating[0] - 3 * player_rating[1]
-        player_div = cls._get_player_division(current_score.division_id, league)
-        # Highest divison has lowest id
-        lowest_id, highest_id = cls._get_division_id_range()
+        player_div = league.get_player_division(current_score.division_id)
 
         if current_score.game_count < PLACEMENT_GAMES:
             return LeagueScore(
@@ -33,52 +29,34 @@ class LeagueRater:
                 current_score.game_count + 1
             )
 
-        if current_score.division_id is None:
+        if current_score.division_id is None or player_div is None:
+            if player_div is None:
+                cls._logger.warn("Doing placement again, because a division for id %s could not be found",
+                                 current_score.division_id)
             return cls._do_placement(league, current_score, rating)
 
-        if rating > player_div.max_rating:
-            boost = POSITIVE_BOOST
-        elif rating < player_div.min_rating:
-            reduction = NEGATIVE_BOOST
-        # Linear interpolation of score and rating to have players in top division sorted by rating
-        elif player_div.id == lowest_id and current_score.score < (player_div.highest_score - player_div.lowest_score) \
-                * (rating - player_div.min_rating) / (player_div.max_rating - player_div.min_rating):
-            boost = HIGHEST_DIVISION_BOOST
-
-        new_score = current_score.score
-        if outcome is GameOutcome.VICTORY:
-            new_score += SCORE_GAIN + boost
-        elif outcome is GameOutcome.DEFEAT:
-            new_score -= SCORE_GAIN + reduction
-        if new_score < 0:
-            new_score = 0
+        new_score = cls._calculate_new_score(league, current_score, outcome, rating, player_div)
 
         new_division_id = current_score.division_id
         if new_score > player_div.highest_score:
-            if lowest_id < new_division_id:
-                new_division_id -= 1
-        elif new_score < player_div.lowest_score:
-            if highest_id > new_division_id:
-                new_division_id += 1
+            higher_div = league.get_next_higher_division(player_div.id)
+            if higher_div is not None:
+                new_division_id = higher_div.id
+                new_score = 0
+            else:
+                new_score = player_div.highest_score
+        elif new_score < 0:
+            lower_div = league.get_next_lower_division(player_div.id)
+            if lower_div is not None:
+                new_division_id = lower_div.id
+                new_score = lower_div.highest_score - 2
+            else:
+                new_score = 0
 
         return LeagueScore(
             new_division_id,
             new_score,
             current_score.game_count + 1
-        )
-
-    @classmethod
-    def _get_player_division(cls, division_id, league):
-        for div in league.divisions:
-            if div.id == division_id:
-                return div
-            # Todo: fallback
-
-    @classmethod
-    def _get_division_id_range(cls, league):
-        return (
-            max(div.id for div in league.divisions),
-            min(div.id for div in league.divisions)
         )
 
     @classmethod
@@ -93,4 +71,32 @@ class LeagueRater:
                     new_score,
                     current_score.game_count + 1
                 )
-            # Todo: fallback
+
+        cls._logger.error("Could not find a suitable division for placement for rating %s", rating)
+        return LeagueScore(
+            current_score.division_id,
+            current_score.score,
+            current_score.game_count + 1
+        )
+    @classmethod
+    def _calculate_new_score(cls, league, current_score, outcome, rating, player_div):
+        boost = 0
+        reduction = 0
+        higher_div = league.get_next_higher_division(player_div.id)
+
+        if rating > player_div.max_rating:
+            boost = POSITIVE_BOOST
+        elif rating < player_div.min_rating:
+            reduction = NEGATIVE_BOOST
+        # Boost for high rated players with low score to have players in top division sorted by rating
+        elif higher_div is None and current_score.score < player_div.highest_score \
+                * (rating - player_div.min_rating) / (player_div.max_rating - player_div.min_rating):
+            boost = HIGHEST_DIVISION_BOOST
+
+        new_score = current_score.score
+        if outcome is GameOutcome.VICTORY:
+            new_score += SCORE_GAIN + boost
+        elif outcome is GameOutcome.DEFEAT:
+            new_score -= SCORE_GAIN + reduction
+
+        return new_score

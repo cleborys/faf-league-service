@@ -1,5 +1,6 @@
 from enum import Enum
 from typing import Callable, Dict, List, NamedTuple, Optional, Tuple
+from ..decorators import with_logger
 
 
 class LeagueServiceError(Exception):
@@ -32,11 +33,50 @@ class LeagueDivision(NamedTuple):
     highest_score: int
 
 
+@with_logger
 class League(NamedTuple):
     name: str
     divisions: List[LeagueDivision]
     current_season_id: int
     rating_type: str
+
+    @classmethod
+    def get_player_division(cls, division_id):
+        for div in cls.divisions:
+            if div.id == division_id:
+                return div
+        cls._logger.error("Could not find a division with id %s", division_id)
+        return None
+
+    @classmethod
+    def get_next_lower_division(cls, division_id):
+        i = 0
+        for div in cls.divisions:
+            if div.id == division_id:
+                if i == 0:
+                    return None
+                else:
+                    return cls.divisions[i - 1]
+            i += 1
+
+    @classmethod
+    def get_next_higher_division(cls, division_id):
+        i = 0
+        for div in cls.divisions:
+            if div.id == division_id:
+                if i == len(cls.divisions) - 1:
+                    return None
+                else:
+                    return cls.divisions[i + 1]
+            i += 1
+
+    @classmethod
+    def get_accumulated_score(cls, division_id, score):
+        div = cls.get_next_lower_division(division_id)
+        while div is not None:
+            score += div.highest_score
+            div = cls.get_next_lower_division(div.id)
+        return score
 
 
 class LeagueScore(NamedTuple):
