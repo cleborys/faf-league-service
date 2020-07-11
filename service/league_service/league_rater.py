@@ -1,8 +1,7 @@
-from service.league_service.typedefs import GameOutcome, Rating
+from service.league_service.typedefs import GameOutcome, Rating, League, LeagueScore
 
+from service import config
 from ..decorators import with_logger
-from .typedefs import League, LeagueScore
-from ..config import *
 
 
 class LeagueRatingError(Exception):
@@ -22,7 +21,7 @@ class LeagueRater:
         rating = player_rating[0] - 3 * player_rating[1]
         player_div = league.get_player_division(current_score.division_id)
 
-        if current_score.game_count < PLACEMENT_GAMES:
+        if current_score.game_count < config.PLACEMENT_GAMES:
             return LeagueScore(
                 current_score.division_id,
                 current_score.score,
@@ -42,14 +41,14 @@ class LeagueRater:
             higher_div = league.get_next_higher_division(player_div.id)
             if higher_div is not None:
                 new_division_id = higher_div.id
-                new_score = 0
+                new_score = config.POINT_BUFFER_AFTER_DIVISION_CHANGE
             else:
                 new_score = player_div.highest_score
         elif new_score < 0:
             lower_div = league.get_next_lower_division(player_div.id)
             if lower_div is not None:
                 new_division_id = lower_div.id
-                new_score = lower_div.highest_score - 2
+                new_score = lower_div.highest_score - config.POINT_BUFFER_AFTER_DIVISION_CHANGE
             else:
                 new_score = 0
 
@@ -61,9 +60,9 @@ class LeagueRater:
 
     @classmethod
     def _do_placement(cls, league, current_score, rating):
-        rating += RATING_MODIFIER_FOR_PLACEMENT
+        rating += config.RATING_MODIFIER_FOR_PLACEMENT
         for div in league.divisions:
-            if div.max_rating > rating > div.min_rating:
+            if div.max_rating >= rating >= div.min_rating:
                 new_score = (div.highest_score - div.lowest_score) \
                     * (rating - div.min_rating) / (div.max_rating - div.min_rating)
                 return LeagueScore(
@@ -85,18 +84,18 @@ class LeagueRater:
         higher_div = league.get_next_higher_division(player_div.id)
 
         if rating > player_div.max_rating:
-            boost = POSITIVE_BOOST
+            boost = config.POSITIVE_BOOST
         elif rating < player_div.min_rating:
-            reduction = NEGATIVE_BOOST
+            reduction = config.NEGATIVE_BOOST
         # Boost for high rated players with low score to have players in top division sorted by rating
         elif higher_div is None and current_score.score < player_div.highest_score \
                 * (rating - player_div.min_rating) / (player_div.max_rating - player_div.min_rating):
-            boost = HIGHEST_DIVISION_BOOST
+            boost = config.HIGHEST_DIVISION_BOOST
 
         new_score = current_score.score
         if outcome is GameOutcome.VICTORY:
-            new_score += SCORE_GAIN + boost
+            new_score += config.SCORE_GAIN + boost
         elif outcome is GameOutcome.DEFEAT:
-            new_score -= SCORE_GAIN + reduction
+            new_score -= config.SCORE_GAIN + reduction
 
         return new_score

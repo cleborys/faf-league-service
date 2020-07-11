@@ -1,5 +1,6 @@
 from enum import Enum
 from typing import Callable, Dict, List, NamedTuple, Optional, Tuple
+
 from ..decorators import with_logger
 
 
@@ -8,6 +9,10 @@ class LeagueServiceError(Exception):
 
 
 class ServiceNotReadyError(LeagueServiceError):
+    pass
+
+
+class PlayerDivisionNotFoundError(Exception):
     pass
 
 
@@ -40,42 +45,38 @@ class League(NamedTuple):
     current_season_id: int
     rating_type: str
 
-    @classmethod
-    def get_player_division(cls, division_id):
-        for div in cls.divisions:
+    def get_player_division(self, division_id):
+        for div in self.divisions:
             if div.id == division_id:
                 return div
-        cls._logger.error("Could not find a division with id %s", division_id)
-        return None
+        self._logger.warn("Could not find a division with id %s", division_id)
+        raise PlayerDivisionNotFoundError("Could not find division for player")
 
-    @classmethod
-    def get_next_lower_division(cls, division_id):
+    def get_next_lower_division(self, division_id):
         i = 0
-        for div in cls.divisions:
+        for div in self.divisions:
             if div.id == division_id:
                 if i == 0:
                     return None
                 else:
-                    return cls.divisions[i - 1]
+                    return self.divisions[i - 1]
             i += 1
 
-    @classmethod
-    def get_next_higher_division(cls, division_id):
+    def get_next_higher_division(self, division_id):
         i = 0
-        for div in cls.divisions:
+        for div in self.divisions:
             if div.id == division_id:
-                if i == len(cls.divisions) - 1:
+                if i == len(self.divisions) - 1:
                     return None
                 else:
-                    return cls.divisions[i + 1]
+                    return self.divisions[i + 1]
             i += 1
 
-    @classmethod
-    def get_accumulated_score(cls, division_id, score):
-        div = cls.get_next_lower_division(division_id)
+    def get_accumulated_score(self, division_id, score):
+        div = self.get_next_lower_division(division_id)
         while div is not None:
             score += div.highest_score
-            div = cls.get_next_lower_division(div.id)
+            div = self.get_next_lower_division(div.id)
         return score
 
 
