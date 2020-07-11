@@ -89,7 +89,11 @@ async def test_update_data(uninitialized_service):
         100,
         200,
     ]
-    assert [division.max_rating for division in test_league.divisions] == [100, 200, None]
+    assert [division.max_rating for division in test_league.divisions] == [
+        100,
+        200,
+        None,
+    ]
     assert [division.highest_score for division in test_league.divisions] == [
         10,
         10,
