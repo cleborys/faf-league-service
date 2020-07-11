@@ -48,7 +48,7 @@ class League(NamedTuple):
         for div in self.divisions:
             if div.id == division_id:
                 return div
-        self._logger.warn("Could not find a division with id %s", division_id)
+        self._logger.warning("Could not find a division with id %s", division_id)
         raise PlayerDivisionNotFoundError("Could not find division for player")
 
     def _get_division_index(self, division_id):
@@ -71,6 +71,12 @@ class League(NamedTuple):
     def get_accumulated_score(self, division_id, score):
         my_division_index = self._get_division_index(division_id)
         return score + sum(div.highest_score for div in self.divisions[:my_division_index])
+
+    def get_highest_division(self):
+        return self.divisions[-1]
+
+    def get_lowest_division(self):
+        return self.divisions[0]
 
 
 class LeagueScore(NamedTuple):

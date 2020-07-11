@@ -21,7 +21,14 @@ class LeagueRater:
         rating = player_rating[0] - 3 * player_rating[1]
         player_div = league.get_player_division(current_score.division_id)
 
-        if current_score.game_count < config.PLACEMENT_GAMES:
+        if current_score.game_count is None:
+            return LeagueScore(
+                current_score.division_id,
+                current_score.score,
+                1
+            )
+
+        if current_score.game_count < config.PLACEMENT_GAMES - 1:  # This check is before we increase game_count
             return LeagueScore(
                 current_score.division_id,
                 current_score.score,
@@ -30,8 +37,8 @@ class LeagueRater:
 
         if current_score.division_id is None or player_div is None:
             if player_div is None:
-                cls._logger.warn("Doing placement again, because a division for id %s could not be found",
-                                 current_score.division_id)
+                cls._logger.warning("Doing placement again, because a division for id %s could not be found",
+                                    current_score.division_id)
             return cls._do_placement(league, current_score, rating)
 
         new_score = cls._calculate_new_score(league, current_score, outcome, rating, player_div)
@@ -69,6 +76,22 @@ class LeagueRater:
                     new_score,
                     current_score.game_count + 1
                 )
+
+        highest_div = league.get_highest_division()
+        if rating > highest_div.max_rating:
+            return LeagueScore(
+                highest_div.id,
+                highest_div.highest_score,
+                current_score.game_count + 1
+            )
+
+        lowest_div = league.get_lowest_division()
+        if rating < lowest_div.min_rating:
+            return LeagueScore(
+                lowest_div.id,
+                0,
+                current_score.game_count + 1
+            )
 
         cls._logger.error("Could not find a suitable division in league %s for placement for rating %s", league, rating)
         return LeagueScore(
