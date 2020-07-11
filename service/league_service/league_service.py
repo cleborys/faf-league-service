@@ -68,7 +68,7 @@ class LeagueService:
                     .outerjoin(league)
                     .outerjoin(leaderboard)
                 )
-                .where(league_season.c.end_date == None)
+                .where(league_season.c.end_date is None)
             )
             result = await conn.execute(sql)
             division_rows = await result.fetchall()

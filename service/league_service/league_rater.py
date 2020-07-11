@@ -71,12 +71,13 @@ class LeagueRater:
                     current_score.game_count + 1
                 )
 
-        cls._logger.error("Could not find a suitable division for placement for rating %s", rating)
+        cls._logger.error("Could not find a suitable division in league %s for placement for rating %s", league, rating)
         return LeagueScore(
             current_score.division_id,
             current_score.score,
             current_score.game_count + 1
         )
+
     @classmethod
     def _calculate_new_score(cls, league, current_score, outcome, rating, player_div):
         boost = 0
