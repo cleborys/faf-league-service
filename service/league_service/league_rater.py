@@ -27,38 +27,20 @@ class LeagueRater:
                 current_score.score,
                 1
             )
-
         if current_score.game_count < config.PLACEMENT_GAMES - 1:  # This check is before we increase game_count
             return LeagueScore(
                 current_score.division_id,
                 current_score.score,
                 current_score.game_count + 1
             )
-
         if current_score.division_id is None or player_div is None:
             if player_div is None:
                 cls._logger.warning("Doing placement again, because a division for id %s could not be found",
                                     current_score.division_id)
             return cls._do_placement(league, current_score, rating)
 
-        new_score = cls._calculate_new_score(league, current_score, outcome, rating, player_div)
-
-        new_division_id = current_score.division_id
-        if new_score > player_div.highest_score:
-            higher_div = league.get_next_higher_division(player_div.id)
-            if higher_div is not None:
-                new_division_id = higher_div.id
-                new_score = config.POINT_BUFFER_AFTER_DIVISION_CHANGE
-            else:
-                new_score = player_div.highest_score
-        elif new_score < 0:
-            lower_div = league.get_next_lower_division(player_div.id)
-            if lower_div is not None:
-                new_division_id = lower_div.id
-                new_score = lower_div.highest_score - config.POINT_BUFFER_AFTER_DIVISION_CHANGE
-            else:
-                new_score = 0
-
+        score = cls._calculate_new_score(league, current_score, outcome, rating, player_div)
+        new_score, new_division_id = cls._calculate_division_change(league, score, current_score.division_id, player_div)
         return LeagueScore(
             new_division_id,
             new_score,
@@ -122,3 +104,21 @@ class LeagueRater:
             new_score -= config.SCORE_GAIN + reduction
 
         return new_score
+
+    @classmethod
+    def _calculate_division_change(cls, league, score, division_id, player_div):
+        if score > player_div.highest_score:
+            higher_div = league.get_next_higher_division(player_div.id)
+            if higher_div is not None:
+                division_id = higher_div.id
+                score = config.POINT_BUFFER_AFTER_DIVISION_CHANGE
+            else:
+                score = player_div.highest_score
+        elif score < 0:
+            lower_div = league.get_next_lower_division(player_div.id)
+            if lower_div is not None:
+                division_id = lower_div.id
+                score = lower_div.highest_score - config.POINT_BUFFER_AFTER_DIVISION_CHANGE
+            else:
+                score = 0
+        return score, division_id
