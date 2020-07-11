@@ -1,5 +1,6 @@
 import pytest
 
+from service import config
 from service.league_service.league_rater import LeagueRater
 from service.league_service.typedefs import (
     GameOutcome,
@@ -16,60 +17,122 @@ def unplaced_player_score():
 
 def test_new_score_victory_no_boost(example_league):
     current_score = LeagueScore(division_id=2, score=5, game_count=30)
-    player_rating = 150
+    player_rating = (180.0, 0.0)
 
-    new_score = LeagueRater._calculate_new_score(
+    new_score = LeagueRater.rate(
         example_league,
         current_score,
         GameOutcome.VICTORY,
         player_rating,
-        example_league.divisions[1],
     )
 
     assert new_score.division_id == current_score.division_id
     assert new_score.game_count == current_score.game_count + 1
-    assert new_score.score == current_score.score + 1
+    assert new_score.score == current_score.score + config.SCORE_GAIN
 
 
 def test_new_score_victory_boost(example_league):
     current_score = LeagueScore(division_id=2, score=5, game_count=30)
-    player_rating = 1500
+    player_rating = (1800.0, 0.0)
 
-    new_score = LeagueRater._calculate_new_score(
+    new_score = LeagueRater.rate(
         example_league,
         current_score,
         GameOutcome.VICTORY,
         player_rating,
-        example_league.divisions[1],
     )
 
     assert new_score.division_id == current_score.division_id
     assert new_score.game_count == current_score.game_count + 1
-    assert new_score.score == current_score.score + 2
+    assert new_score.score == current_score.score + config.SCORE_GAIN + config.POSITIVE_BOOST
+
+
+def test_new_score_defeat_no_boost(example_league):
+    current_score = LeagueScore(division_id=2, score=5, game_count=30)
+    player_rating = (180.0, 0.0)
+
+    new_score = LeagueRater.rate(
+        example_league,
+        current_score,
+        GameOutcome.DEFEAT,
+        player_rating,
+    )
+
+    assert new_score.division_id == current_score.division_id
+    assert new_score.game_count == current_score.game_count + 1
+    assert new_score.score == current_score.score - config.SCORE_GAIN
+
+
+def test_new_score_defeat_boost(example_league):
+    current_score = LeagueScore(division_id=2, score=5, game_count=30)
+    player_rating = (60.0, 0.0)
+
+    new_score = LeagueRater.rate(
+        example_league,
+        current_score,
+        GameOutcome.DEFEAT,
+        player_rating,
+    )
+
+    assert new_score.division_id == current_score.division_id
+    assert new_score.game_count == current_score.game_count + 1
+    assert new_score.score == current_score.score - config.SCORE_GAIN - config.NEGATIVE_BOOST
+
+
+def test_new_score_victory_highest_division_no_boost(example_league):
+    current_score = LeagueScore(division_id=3, score=5, game_count=30)
+    player_rating = (240.0, 0.0)
+
+    new_score = LeagueRater.rate(
+        example_league,
+        current_score,
+        GameOutcome.VICTORY,
+        player_rating,
+    )
+
+    assert new_score.division_id == current_score.division_id
+    assert new_score.game_count == current_score.game_count + 1
+    assert new_score.score == current_score.score + config.SCORE_GAIN
+
+
+def test_new_score_victory_highest_division_boost(example_league):
+    current_score = LeagueScore(division_id=3, score=5, game_count=30)
+    player_rating = (380.0, 0.0)
+
+    new_score = LeagueRater.rate(
+        example_league,
+        current_score,
+        GameOutcome.VICTORY,
+        player_rating,
+    )
+
+    assert new_score.division_id == current_score.division_id
+    assert new_score.game_count == current_score.game_count + 1
+    assert new_score.score == current_score.score + config.SCORE_GAIN + config.HIGHEST_DIVISION_BOOST
 
 
 def test_placement(example_league, unplaced_player_score):
-    rating = 150
+    rating = 150 - config.RATING_MODIFIER_FOR_PLACEMENT
 
     new_score = LeagueRater._do_placement(example_league, unplaced_player_score, rating)
 
     assert new_score.division_id == example_league.divisions[1].id
-    assert new_score.score == 5  # TODO: or whatever you expect here
+    assert new_score.score == 5
 
 
 def test_placement_high_rating(example_league, unplaced_player_score):
-    rating = 1500
+    rating = 1500 - config.RATING_MODIFIER_FOR_PLACEMENT
 
     new_score = LeagueRater._do_placement(example_league, unplaced_player_score, rating)
 
     assert new_score.division_id == example_league.divisions[-1].id
-    assert new_score.score > 100  # TODO: or whatever you expect here
+    assert new_score.score == 10
 
 
 def test_placement_low_rating(example_league, unplaced_player_score):
-    rating = -500
+    rating = -500 - config.RATING_MODIFIER_FOR_PLACEMENT
 
     new_score = LeagueRater._do_placement(example_league, unplaced_player_score, rating)
 
     assert new_score.division_id == example_league.divisions[0].id
-    assert new_score.score == 0  # TODO: or whatever you expect here
+    assert new_score.score == 0
