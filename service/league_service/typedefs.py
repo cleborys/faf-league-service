@@ -52,6 +52,9 @@ class League(NamedTuple):
         self._logger.warn("Could not find a division with id %s", division_id)
         raise PlayerDivisionNotFoundError("Could not find division for player")
 
+    def _get_division_index(self, division_id):
+        return next((i for (i, div) in enumerate(self.divisions) if div.id == division_id), [None])
+
     def get_next_lower_division(self, division_id):
         i = 0
         for div in self.divisions:
@@ -73,11 +76,8 @@ class League(NamedTuple):
             i += 1
 
     def get_accumulated_score(self, division_id, score):
-        div = self.get_next_lower_division(division_id)
-        while div is not None:
-            score += div.highest_score
-            div = self.get_next_lower_division(div.id)
-        return score
+        my_division_index = self._get_division_index(division_id)
+        return score + sum(div.highest_score for div in self.divisions[:my_division_index])
 
 
 class LeagueScore(NamedTuple):
