@@ -56,24 +56,18 @@ class League(NamedTuple):
         return next((i for (i, div) in enumerate(self.divisions) if div.id == division_id), [None])
 
     def get_next_lower_division(self, division_id):
-        i = 0
-        for div in self.divisions:
-            if div.id == division_id:
-                if i == 0:
-                    return None
-                else:
-                    return self.divisions[i - 1]
-            i += 1
+        i = self._get_division_index(division_id)  # Should we check for None? We pass player_div.id at the moment,
+        if i == 0:                                   # so it is not an issue, but we can't enforce that
+            return None
+        else:
+            return self.divisions[i - 1]
 
     def get_next_higher_division(self, division_id):
-        i = 0
-        for div in self.divisions:
-            if div.id == division_id:
-                if i == len(self.divisions) - 1:
-                    return None
-                else:
-                    return self.divisions[i + 1]
-            i += 1
+        i = self._get_division_index(division_id)  # Same here
+        if i == len(self.divisions) - 1:
+            return None
+        else:
+            return self.divisions[i + 1]
 
     def get_accumulated_score(self, division_id, score):
         my_division_index = self._get_division_index(division_id)
