@@ -34,7 +34,6 @@ class LeagueDivision(NamedTuple):
     id: int
     min_rating: float
     max_rating: float
-    lowest_score: int
     highest_score: int
 
 

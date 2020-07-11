@@ -33,7 +33,6 @@ CREATE TABLE league_season_division
   description_key   VARCHAR(255)          NOT NULL COMMENT "The division's i18n flavor text key",
   min_rating        FLOAT,
   max_rating        FLOAT,
-  lowest_score      INT,
   highest_score     INT,
   FOREIGN KEY (league_season_id) REFERENCES league_season (id)
 );

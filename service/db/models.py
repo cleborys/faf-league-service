@@ -59,7 +59,6 @@ league_season_division = Table(
     Column("division_index", Integer),
     Column("min_rating", Float),
     Column("max_rating", Float),
-    Column("lowest_score", Integer),
     Column("highest_score", Integer),
 )
 

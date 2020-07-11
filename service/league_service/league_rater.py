@@ -63,8 +63,7 @@ class LeagueRater:
         rating += config.RATING_MODIFIER_FOR_PLACEMENT
         for div in league.divisions:
             if div.max_rating >= rating >= div.min_rating:
-                new_score = (div.highest_score - div.lowest_score) \
-                    * (rating - div.min_rating) / (div.max_rating - div.min_rating)
+                new_score = div.highest_score * (rating - div.min_rating) / (div.max_rating - div.min_rating)
                 return LeagueScore(
                     div.id,
                     new_score,
