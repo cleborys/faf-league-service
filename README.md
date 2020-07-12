@@ -10,14 +10,14 @@ Follow the steps to get [faf-db](https://github.com/FAForever/db) setup, the fol
 (Most likely that simply means cloning the repository and running `scripts/init_db.sh`.)
 
 Additionally, the service needs a running RabbitMQ server, which can be started
-via docker by running `ci/init-fabbitmq.sh`,
+via docker by running `ci/init-rabbitmq.sh`,
 which starts a RabbitMQ server on vhost `/faf-lobby`.
 
 Finally, you need to migrate the database manually once to define the new league tables.
 To do so run
 ```
 docker cp league_table_migration.sql faf-db:.
-docker exec faf-db sh -c "mysql faf < league_table_migration.sql"
+docker exec faf-db sh -c "mysql faf -pbanana < league_table_migration.sql"
 ```
 
 ## Setting up for development
@@ -40,6 +40,9 @@ deployment use `faf-stack`*
 Run
 
     $ pipenv run tests
+
+To run the tests directly in PyCharm you need to add `--mysql_database=faf`
+in the Additional Arguments field in the Run Configuration.
 
 ## Other tools
 
