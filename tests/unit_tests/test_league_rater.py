@@ -136,3 +136,147 @@ def test_placement_low_rating(example_league, unplaced_player_score):
 
     assert new_score.division_id == example_league.divisions[0].id
     assert new_score.score == 0
+
+
+def test_new_player(example_league):
+    current_score = LeagueScore(division_id=None, score=None, game_count=None)
+    player_rating = (380.0, 0.0)
+
+    new_score = LeagueRater.rate(
+        example_league,
+        current_score,
+        GameOutcome.VICTORY,
+        player_rating,
+    )
+
+    assert new_score.division_id == current_score.division_id
+    assert new_score.game_count == 1
+    assert new_score.score == current_score.score
+
+
+def test_placement_games(example_league):
+    current_score = LeagueScore(division_id=None, score=None, game_count=5)
+    player_rating = (380.0, 0.0)
+
+    new_score = LeagueRater.rate(
+        example_league,
+        current_score,
+        GameOutcome.VICTORY,
+        player_rating,
+    )
+
+    assert new_score.division_id == current_score.division_id
+    assert new_score.game_count == 6
+    assert new_score.score == current_score.score
+
+
+def test_promote(example_league):
+    current_score = LeagueScore(division_id=2, score=10, game_count=30)
+    player_rating = (380.0, 0.0)
+
+    new_score = LeagueRater.rate(
+        example_league,
+        current_score,
+        GameOutcome.VICTORY,
+        player_rating,
+    )
+
+    assert new_score.division_id == 3
+    assert new_score.game_count == 31
+    assert new_score.score == config.POINT_BUFFER_AFTER_DIVISION_CHANGE
+
+
+def test_demote(example_league):
+    current_score = LeagueScore(division_id=2, score=0, game_count=30)
+    player_rating = (380.0, 0.0)
+
+    new_score = LeagueRater.rate(
+        example_league,
+        current_score,
+        GameOutcome.DEFEAT,
+        player_rating,
+    )
+
+    assert new_score.division_id == 1
+    assert new_score.game_count == 31
+    assert new_score.score == 10 - config.POINT_BUFFER_AFTER_DIVISION_CHANGE
+
+
+def test_promote_in_highest_division(example_league):
+    current_score = LeagueScore(division_id=3, score=10, game_count=30)
+    player_rating = (380.0, 0.0)
+
+    new_score = LeagueRater.rate(
+        example_league,
+        current_score,
+        GameOutcome.VICTORY,
+        player_rating,
+    )
+
+    assert new_score.division_id == 3
+    assert new_score.game_count == 31
+    assert new_score.score == 10
+
+
+def test_demote_in_lowest_division(example_league):
+    current_score = LeagueScore(division_id=1, score=0, game_count=30)
+    player_rating = (380.0, 0.0)
+
+    new_score = LeagueRater.rate(
+        example_league,
+        current_score,
+        GameOutcome.DEFEAT,
+        player_rating,
+    )
+
+    assert new_score.division_id == 1
+    assert new_score.game_count == 31
+    assert new_score.score == 0
+
+
+def test_score_too_high(example_league):
+    current_score = LeagueScore(division_id=2, score=14, game_count=30)
+    player_rating = (380.0, 0.0)
+
+    new_score = LeagueRater.rate(
+        example_league,
+        current_score,
+        GameOutcome.VICTORY,
+        player_rating,
+    )
+
+    assert new_score.division_id == 3
+    assert new_score.game_count == 31
+    assert new_score.score == config.POINT_BUFFER_AFTER_DIVISION_CHANGE
+
+
+def test_score_too_low(example_league):
+    current_score = LeagueScore(division_id=2, score=-14, game_count=30)
+    player_rating = (380.0, 0.0)
+
+    new_score = LeagueRater.rate(
+        example_league,
+        current_score,
+        GameOutcome.VICTORY,
+        player_rating,
+    )
+
+    assert new_score.division_id == 1
+    assert new_score.game_count == 31
+    assert new_score.score == 10 - config.POINT_BUFFER_AFTER_DIVISION_CHANGE
+
+
+def test_draw(example_league):
+    current_score = LeagueScore(division_id=2, score=4, game_count=30)
+    player_rating = (380.0, 0.0)
+
+    new_score = LeagueRater.rate(
+        example_league,
+        current_score,
+        GameOutcome.DRAW,
+        player_rating,
+    )
+
+    assert new_score.division_id == current_score.division_id
+    assert new_score.game_count == 31
+    assert new_score.score == current_score.score
