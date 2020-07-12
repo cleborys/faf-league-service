@@ -16,6 +16,10 @@ class PlayerDivisionNotFoundError(Exception):
     pass
 
 
+class DivisionDoesNotExistError(Exception):
+    pass
+
+
 PlayerID = int
 RatingType = str  # e.g. "ladder_1v1"
 Rating = Tuple[float, float]

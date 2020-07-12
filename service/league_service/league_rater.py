@@ -1,4 +1,4 @@
-from service.league_service.typedefs import GameOutcome, Rating, League, LeagueScore
+from service.league_service.typedefs import GameOutcome, Rating, League, LeagueScore, DivisionDoesNotExistError
 
 from service import config
 from ..decorators import with_logger
@@ -18,9 +18,6 @@ class LeagueRater:
         outcome: GameOutcome,
         player_rating: Rating,
     ):
-        rating = player_rating[0] - 3 * player_rating[1]
-        player_div = league.get_player_division(current_score.division_id)
-
         if current_score.game_count is None:
             return LeagueScore(
                 current_score.division_id,
@@ -33,9 +30,12 @@ class LeagueRater:
                 current_score.score,
                 current_score.game_count + 1
             )
+
+        rating = player_rating[0] - 3 * player_rating[1]
+        player_div = league.get_player_division(current_score.division_id)
         if current_score.division_id is None or player_div is None:
-            if player_div is None:
-                cls._logger.warning("Doing placement again, because a division for id %s could not be found",
+            if player_div is None:  # Todo: refactor, because this is unreachable at the moment
+                cls._logger.warning("Doing placement again, because a division for id %s could not be found.",
                                     current_score.division_id)
             return cls._do_placement(league, current_score, rating)
 
@@ -75,12 +75,9 @@ class LeagueRater:
                 current_score.game_count + 1
             )
 
-        cls._logger.error("Could not find a suitable division in league %s for placement for rating %s", league, rating)
-        return LeagueScore(
-            current_score.division_id,
-            current_score.score,
-            current_score.game_count + 1
-        )
+        cls._logger.warning("Could not find a suitable division in league %s for placement for rating %s",
+                            league, rating)
+        raise DivisionDoesNotExistError("Can't find suitable division for placement.")
 
     @classmethod
     def _calculate_new_score(cls, league, current_score, outcome, rating, player_div):
