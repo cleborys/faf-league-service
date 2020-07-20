@@ -20,12 +20,6 @@ class LeagueRater:
         outcome: GameOutcome,
         player_rating: Rating,
     ):
-        if current_score.game_count is None:
-            return LeagueScore(
-                current_score.division_id,
-                current_score.score,
-                1
-            )
         if current_score.game_count < config.PLACEMENT_GAMES - 1:  # This check is before we increase game_count
             return LeagueScore(
                 current_score.division_id,
@@ -34,15 +28,17 @@ class LeagueRater:
             )
 
         rating = player_rating[0] - 3 * player_rating[1]
-        player_div = league.get_player_division(current_score.division_id)
-        if current_score.division_id is None or player_div is None:
-            if player_div is None:  # Todo: refactor, because this is unreachable at the moment
-                cls._logger.warning("Doing placement again, because a division for id %s could not be found.",
-                                    current_score.division_id)
+        if current_score.division_id is None:
             return cls._do_placement(league, current_score, rating)
 
-        score = cls._calculate_new_score(league, current_score, outcome, rating, player_div)
-        new_score, new_division_id = cls._calculate_division_change(league, score, current_score.division_id, player_div)
+        player_div = league.get_division(current_score.division_id)
+        if player_div is None:
+            cls._logger.warning("Doing placement again, because a division for id %s could not be found.",
+                                current_score.division_id)
+            return cls._do_placement(league, current_score, rating)
+
+        interim_score = cls._calculate_new_score(league, current_score, outcome, rating, player_div)
+        new_score, new_division_id = cls._calculate_division_change(league, interim_score, current_score.division_id, player_div)
         return LeagueScore(
             new_division_id,
             new_score,
@@ -100,7 +96,7 @@ class LeagueRater:
         if outcome is GameOutcome.VICTORY:
             new_score += config.SCORE_GAIN + boost
         elif outcome is GameOutcome.DEFEAT:
-            new_score -= config.SCORE_GAIN + reduction
+            new_score -= (config.SCORE_GAIN + reduction)
 
         return new_score
 
@@ -117,7 +113,7 @@ class LeagueRater:
             lower_div = league.get_next_lower_division(player_div.id)
             if lower_div is not None:
                 division_id = lower_div.id
-                score = lower_div.highest_score - config.POINT_BUFFER_AFTER_DIVISION_CHANGE
+                score = max(lower_div.highest_score - config.POINT_BUFFER_AFTER_DIVISION_CHANGE, 0)
             else:
                 score = 0
         return score, division_id

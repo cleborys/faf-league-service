@@ -108,6 +108,7 @@ def test_new_score_victory_highest_division_boost(example_league):
 
 
 def test_placement(example_league, unplaced_player_score):
+    # Neutralize the offset in the placement function so we can test the score independently of the config settings
     rating = 150 - config.RATING_MODIFIER_FOR_PLACEMENT
 
     new_score = LeagueRater._do_placement(example_league, unplaced_player_score, rating)
@@ -135,7 +136,7 @@ def test_placement_low_rating(example_league, unplaced_player_score):
 
 
 def test_new_player(example_league):
-    current_score = LeagueScore(division_id=None, score=None, game_count=None)
+    current_score = LeagueScore(division_id=None, score=None, game_count=0)
     player_rating = (380.0, 0.0)
 
     new_score = LeagueRater.rate(

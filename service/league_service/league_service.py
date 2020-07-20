@@ -58,7 +58,7 @@ class LeagueService:
                     .outerjoin(league)
                     .outerjoin(leaderboard)
                 )
-                .where(league_season.c.end_date == None)  # Changing "==" to "is" makes test fail. What the fuck?
+                .where(league_season.c.end_date == None)
             )
             result = await conn.execute(sql)
             division_rows = await result.fetchall()

@@ -48,25 +48,25 @@ class League(NamedTuple):
     current_season_id: int
     rating_type: str
 
-    def get_player_division(self, division_id):
+    def get_division(self, division_id):
         for div in self.divisions:
             if div.id == division_id:
                 return div
         self._logger.warning("Could not find a division with id %s", division_id)
-        raise PlayerDivisionNotFoundError("Could not find division for player")
+        return None
 
     def _get_division_index(self, division_id):
         return next((i for (i, div) in enumerate(self.divisions) if div.id == division_id), [None])
 
-    def get_next_lower_division(self, division_id):
-        i = self._get_division_index(division_id)  # Should we check for None? We pass player_div.id at the moment,
-        if i == 0:                                   # so it is not an issue, but we can't enforce that
+    def get_next_lower_division(self, division_id: int) -> Optional[int]:
+        i = self._get_division_index(division_id)
+        if i == 0:
             return None
         else:
             return self.divisions[i - 1]
 
-    def get_next_higher_division(self, division_id):
-        i = self._get_division_index(division_id)  # Same here
+    def get_next_higher_division(self, division_id: int) -> Optional[int]:
+        i = self._get_division_index(division_id)
         if i == len(self.divisions) - 1:
             return None
         else:
