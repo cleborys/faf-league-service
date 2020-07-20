@@ -12,10 +12,6 @@ class ServiceNotReadyError(LeagueServiceError):
     pass
 
 
-class PlayerDivisionNotFoundError(Exception):
-    pass
-
-
 class DivisionDoesNotExistError(Exception):
     pass
 

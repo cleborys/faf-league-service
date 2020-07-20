@@ -1,9 +1,7 @@
 import pytest
 
-from service.league_service.typedefs import PlayerDivisionNotFoundError
 
-
-def test_get_player_division(example_league):
+def test_get_division(example_league):
     assert (
             example_league.get_division(division_id=1) is example_league.divisions[0]
     )
@@ -17,8 +15,7 @@ def test_get_player_division(example_league):
 
 def test_get_player_division_not_found(example_league):
     division_id = 999
-    with pytest.raises(PlayerDivisionNotFoundError):
-        example_league.get_division(division_id)
+    assert example_league.get_division(division_id) is None
 
 
 def test_get_next_higher_division(example_league):
