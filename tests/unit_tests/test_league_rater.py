@@ -8,7 +8,7 @@ from service.league_service.typedefs import (GameOutcome, League,
 
 @pytest.fixture
 def unplaced_player_score():
-    return LeagueScore(division_id=None, score=None, game_count=10)
+    return LeagueScore(division_id=None, score=None, game_count=config.PLACEMENT_GAMES - 1)
 
 
 def test_new_score_victory_no_boost(example_league):
@@ -133,6 +133,28 @@ def test_new_score_victory_highest_division_boost(example_league):
     assert new_score.score == current_score.score + config.SCORE_GAIN + config.HIGHEST_DIVISION_BOOST
 
 
+def test_placement_after_enough_games(example_league, unplaced_player_score):
+    # Neutralize the offset in the placement function so we can test the score independently of the config settings
+    rating = (150.0 - config.RATING_MODIFIER_FOR_PLACEMENT, 0.0)
+
+    new_score = LeagueRater.rate(example_league, unplaced_player_score, None, rating)
+
+    assert new_score.division_id == example_league.divisions[1].id
+    assert new_score.game_count == unplaced_player_score.game_count + 1
+    assert new_score.score == 5
+
+
+def test_replacement_at_invalid_player_division(example_league):
+    current_score = LeagueScore(division_id=999, score=4, game_count=config.PLACEMENT_GAMES)
+    rating = (150.0 - config.RATING_MODIFIER_FOR_PLACEMENT, 0.0)
+
+    new_score = LeagueRater.rate(example_league, current_score, None, rating)
+
+    assert new_score.division_id == example_league.divisions[1].id
+    assert new_score.game_count == current_score.game_count + 1
+    assert new_score.score == 5
+
+
 def test_placement(example_league, unplaced_player_score):
     # Neutralize the offset in the placement function so we can test the score independently of the config settings
     rating = 150 - config.RATING_MODIFIER_FOR_PLACEMENT
@@ -140,6 +162,7 @@ def test_placement(example_league, unplaced_player_score):
     new_score = LeagueRater._do_placement(example_league, unplaced_player_score, rating)
 
     assert new_score.division_id == example_league.divisions[1].id
+    assert new_score.game_count == unplaced_player_score.game_count + 1
     assert new_score.score == 5
 
 
@@ -149,6 +172,7 @@ def test_placement_high_rating(example_league, unplaced_player_score):
     new_score = LeagueRater._do_placement(example_league, unplaced_player_score, rating)
 
     assert new_score.division_id == example_league.divisions[-1].id
+    assert new_score.game_count == unplaced_player_score.game_count + 1
     assert new_score.score == 10
 
 
@@ -158,6 +182,7 @@ def test_placement_low_rating(example_league, unplaced_player_score):
     new_score = LeagueRater._do_placement(example_league, unplaced_player_score, rating)
 
     assert new_score.division_id == example_league.divisions[0].id
+    assert new_score.game_count == unplaced_player_score.game_count + 1
     assert new_score.score == 0
 
 
