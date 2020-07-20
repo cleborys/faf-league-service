@@ -26,6 +26,19 @@ def test_new_score_victory_no_boost(example_league):
     assert new_score.game_count == current_score.game_count + 1
     assert new_score.score == current_score.score + config.SCORE_GAIN
 
+    player_rating = (10.0, 0.0)
+
+    new_score = LeagueRater.rate(
+        example_league,
+        current_score,
+        GameOutcome.VICTORY,
+        player_rating,
+    )
+
+    assert new_score.division_id == current_score.division_id
+    assert new_score.game_count == current_score.game_count + 1
+    assert new_score.score == current_score.score + config.SCORE_GAIN
+
 
 def test_new_score_victory_boost(example_league):
     current_score = LeagueScore(division_id=2, score=5, game_count=30)
@@ -46,6 +59,19 @@ def test_new_score_victory_boost(example_league):
 def test_new_score_defeat_no_boost(example_league):
     current_score = LeagueScore(division_id=2, score=5, game_count=30)
     player_rating = (180.0, 0.0)
+
+    new_score = LeagueRater.rate(
+        example_league,
+        current_score,
+        GameOutcome.DEFEAT,
+        player_rating,
+    )
+
+    assert new_score.division_id == current_score.division_id
+    assert new_score.game_count == current_score.game_count + 1
+    assert new_score.score == current_score.score - config.SCORE_GAIN
+
+    player_rating = (1800.0, 0.0)
 
     new_score = LeagueRater.rate(
         example_league,
@@ -263,14 +289,47 @@ def test_score_too_low(example_league):
     assert new_score.score == 10 - config.POINT_BUFFER_AFTER_DIVISION_CHANGE
 
 
-def test_draw(example_league):
+def test_other_game_outcomes(example_league):
     current_score = LeagueScore(division_id=2, score=4, game_count=30)
-    player_rating = (380.0, 0.0)
+    player_rating = (180.0, 0.0)
 
     new_score = LeagueRater.rate(
         example_league,
         current_score,
         GameOutcome.DRAW,
+        player_rating,
+    )
+
+    assert new_score.division_id == current_score.division_id
+    assert new_score.game_count == 31
+    assert new_score.score == current_score.score
+
+    new_score = LeagueRater.rate(
+        example_league,
+        current_score,
+        GameOutcome.MUTUAL_DRAW,
+        player_rating,
+    )
+
+    assert new_score.division_id == current_score.division_id
+    assert new_score.game_count == 31
+    assert new_score.score == current_score.score
+
+    new_score = LeagueRater.rate(
+        example_league,
+        current_score,
+        GameOutcome.UNKNOWN,
+        player_rating,
+    )
+
+    assert new_score.division_id == current_score.division_id
+    assert new_score.game_count == 31
+    assert new_score.score == current_score.score
+
+    new_score = LeagueRater.rate(
+        example_league,
+        current_score,
+        GameOutcome.CONFLICTING,
         player_rating,
     )
 
