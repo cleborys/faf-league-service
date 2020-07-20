@@ -2,12 +2,8 @@ import pytest
 
 from service import config
 from service.league_service.league_rater import LeagueRater
-from service.league_service.typedefs import (
-    GameOutcome,
-    League,
-    LeagueDivision,
-    LeagueScore,
-)
+from service.league_service.typedefs import (GameOutcome, League,
+                                             LeagueDivision, LeagueScore)
 
 
 @pytest.fixture

@@ -2,32 +2,22 @@ import asyncio
 from collections import defaultdict
 from typing import Dict
 
-from aio_pika import IncomingMessage
-
 import aiocron
-from service import config
-from service.db import FAFDatabase
-from service.db.models import (
-    leaderboard,
-    league,
-    league_season,
-    league_season_division,
-    league_season_score,
-)
-from service.decorators import with_logger
-from service.message_queue_service import MessageQueueService, message_to_dict
-from service.metrics import league_service_backlog
+from aio_pika import IncomingMessage
 from sqlalchemy import and_, select
 from sqlalchemy.dialects.mysql import insert
 
+from service import config
+from service.db import FAFDatabase
+from service.db.models import (leaderboard, league, league_season,
+                               league_season_division, league_season_score)
+from service.decorators import with_logger
+from service.message_queue_service import MessageQueueService, message_to_dict
+from service.metrics import league_service_backlog
+
 from .league_rater import LeagueRater
-from .typedefs import (
-    League,
-    LeagueDivision,
-    LeagueRatingRequest,
-    LeagueScore,
-    ServiceNotReadyError,
-)
+from .typedefs import (League, LeagueDivision, LeagueRatingRequest,
+                       LeagueScore, ServiceNotReadyError)
 
 
 @with_logger

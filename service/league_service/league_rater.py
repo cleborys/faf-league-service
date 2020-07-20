@@ -1,6 +1,8 @@
-from service.league_service.typedefs import GameOutcome, Rating, League, LeagueScore, DivisionDoesNotExistError
-
 from service import config
+from service.league_service.typedefs import (DivisionDoesNotExistError,
+                                             GameOutcome, League, LeagueScore,
+                                             Rating)
+
 from ..decorators import with_logger
 
 

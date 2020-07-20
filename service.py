@@ -5,8 +5,8 @@ import logging
 import signal
 
 from service import config, db
-from service.message_queue_service import MessageQueueService
 from service.league_service import LeagueService
+from service.message_queue_service import MessageQueueService
 
 
 async def main():
