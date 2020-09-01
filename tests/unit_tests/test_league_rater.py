@@ -197,7 +197,7 @@ def test_new_player(example_league):
         player_rating,
     )
 
-    assert new_score.division_id == current_score.division_id
+    assert new_score.division_id is None
     assert new_score.game_count == 1
     assert new_score.score == current_score.score
 
