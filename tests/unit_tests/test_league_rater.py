@@ -214,7 +214,7 @@ def test_placement_games(example_league):
     )
 
     assert new_score.division_id is None
-    assert new_score.game_count == 6
+    assert new_score.game_count == current_score.game_count + 1
     assert new_score.score is None
 
 
