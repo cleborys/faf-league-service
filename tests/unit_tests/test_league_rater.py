@@ -310,7 +310,7 @@ def test_score_too_low(example_league):
     )
 
     assert new_score.division_id == 1
-    assert new_score.game_count == 31
+    assert new_score.game_count == current_score.game_count + 1
     assert new_score.score == 10 - config.POINT_BUFFER_AFTER_DIVISION_CHANGE
 
 
