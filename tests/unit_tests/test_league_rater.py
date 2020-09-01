@@ -359,5 +359,5 @@ def test_other_game_outcomes(example_league):
     )
 
     assert new_score.division_id == current_score.division_id
-    assert new_score.game_count == 31
+    assert new_score.game_count == current_score.game_count + 1
     assert new_score.score == current_score.score
