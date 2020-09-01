@@ -148,7 +148,7 @@ def test_replacement_at_invalid_player_division(example_league):
     current_score = LeagueScore(division_id=999, score=4, game_count=config.PLACEMENT_GAMES)
     rating = (150.0 - config.RATING_MODIFIER_FOR_PLACEMENT, 0.0)
 
-    new_score = LeagueRater.rate(example_league, current_score, None, rating)
+    new_score = LeagueRater.rate(example_league, current_score, GameOutcome.DRAW, rating)
 
     assert new_score.division_id == example_league.divisions[1].id
     assert new_score.game_count == current_score.game_count + 1
