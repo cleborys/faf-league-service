@@ -278,7 +278,7 @@ def test_demote_in_lowest_division(example_league):
     )
 
     assert new_score.division_id == current_score.division_id
-    assert new_score.game_count == 31
+    assert new_score.game_count == current_score.game_count + 1
     assert new_score.score == 0
 
 
