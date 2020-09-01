@@ -294,7 +294,7 @@ def test_score_too_high(example_league):
     )
 
     assert new_score.division_id == 3
-    assert new_score.game_count == 31
+    assert new_score.game_count == current_score.game_count + 1
     assert new_score.score == config.POINT_BUFFER_AFTER_DIVISION_CHANGE
 
 
