@@ -261,7 +261,7 @@ def test_promote_in_highest_division(example_league):
         player_rating,
     )
 
-    assert new_score.division_id == 3
+    assert new_score.division_id == current_score.division_id
     assert new_score.game_count == 31
     assert new_score.score == 10
 
