@@ -13,7 +13,7 @@ INSERT INTO league_season (id, league_id, leaderboard_id, start_date, end_date) 
   (2, 1, 1, NOW() - interval 1 year, NULL),
   (3, 2, 2, NOW() - interval 2 year, NULL);
 
-INSERT INTO league_season_division (id, league_season_id, division_index, name_key, description_key, from_mean, to_mean, highest_score) VALUES
+INSERT INTO league_season_division (id, league_season_id, division_index, name_key, description_key, min_rating, max_rating, highest_score) VALUES
   (1, 1, 1, "name_key", "description_key", NULL, 150, 10),
   (2, 1, 2, "name_key", "description_key", 150, NULL, NULL),
   (3, 2, 1, "name_key", "description_key", NULL, 100, 10),
