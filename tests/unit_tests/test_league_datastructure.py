@@ -37,5 +37,5 @@ def test_get_accumulated_score(example_league):
 
     total_score = example_league.get_accumulated_score(division_id, score)
 
-    expected_total_score = 15
+    expected_total_score = score + example_league.divisions[0].highest_score
     assert total_score == expected_total_score
