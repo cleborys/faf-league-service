@@ -137,7 +137,7 @@ def test_placement_after_enough_games(example_league, unplaced_player_score):
     # Neutralize the offset in the placement function so we can test the score independently of the config settings
     rating = (150.0 - config.RATING_MODIFIER_FOR_PLACEMENT, 0.0)
 
-    new_score = LeagueRater.rate(example_league, unplaced_player_score, None, rating)
+    new_score = LeagueRater.rate(example_league, unplaced_player_score, GameOutcome.DRAW, rating)
 
     assert new_score.division_id == example_league.divisions[1].id
     assert new_score.game_count == unplaced_player_score.game_count + 1
