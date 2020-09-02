@@ -148,6 +148,37 @@ def test_replacement_at_invalid_player_division(example_league):
     assert new_score.score == 5
 
 
+def test_replacement_at_null_division(example_league):
+    current_score = LeagueScore(
+        division_id=None, score=4, game_count=config.PLACEMENT_GAMES
+    )
+    rating = (150.0 - config.RATING_MODIFIER_FOR_PLACEMENT, 0.0)
+
+    new_score = LeagueRater.rate(
+        example_league, current_score, GameOutcome.DRAW, rating
+    )
+
+    assert new_score.division_id == example_league.divisions[1].id
+    assert new_score.game_count == current_score.game_count + 1
+    assert new_score.score == 5
+
+
+def test_replacement_at_null_score(example_league):
+    expected_division_id = example_league.divisions[1].id
+    current_score = LeagueScore(
+        division_id=expected_division_id, score=None, game_count=config.PLACEMENT_GAMES
+    )
+    rating = (150.0 - config.RATING_MODIFIER_FOR_PLACEMENT, 0.0)
+
+    new_score = LeagueRater.rate(
+        example_league, current_score, GameOutcome.DRAW, rating
+    )
+
+    assert new_score.division_id == expected_division_id
+    assert new_score.game_count == current_score.game_count + 1
+    assert new_score.score == 5
+
+
 def test_placement(example_league, unplaced_player_score):
     # Neutralize the offset in the placement function so we can test the score independently of the config settings
     rating = 150 - config.RATING_MODIFIER_FOR_PLACEMENT

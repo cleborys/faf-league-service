@@ -16,8 +16,8 @@ from sqlalchemy import and_, select
 from sqlalchemy.dialects.mysql import insert
 
 from .league_rater import LeagueRater
-from .typedefs import (League, LeagueDivision, LeagueRatingRequest,
-                       LeagueScore, ServiceNotReadyError)
+from .typedefs import (InvalidScoreError, League, LeagueDivision,
+                       LeagueRatingRequest, LeagueScore, ServiceNotReadyError)
 
 
 @with_logger
@@ -123,7 +123,9 @@ class LeagueService:
         new_score = LeagueRater.rate(
             league, current_score, request.outcome, request.rating
         )
-        await self._persist_score(new_score)
+        await self._persist_score(
+            request.player_id, league.current_season_id, new_score
+        )
         await self._broadcast_score_change(request.player_id, league, new_score)
 
     async def _load_score(self, player_id, league_season_id):
@@ -137,7 +139,7 @@ class LeagueService:
             result = await conn.execute(sql)
             row = await result.fetchone()
         if row is None:
-            return None
+            return LeagueScore(None, None, 0)
 
         return LeagueScore(
             row[league_season_score.c.division_id],
@@ -145,14 +147,28 @@ class LeagueService:
             row[league_season_score.c.game_count],
         )
 
-    async def _persist_score(self, player_id: int, new_score: LeagueScore):
+    async def _persist_score(
+        self, player_id: int, season_id: int, new_score: LeagueScore
+    ):
         async with self._db.acquire() as conn:
-            select_season_id = select(
-                [league_season_division.c.league_season_id]
-            ).where(league_season_division.c.id == new_score.division_id)
-            result = await conn.execute(select_season_id)
-            row = await result.fetchone()
-            season_id = row["league_season_id"]
+            # TODO this asserts that the passed season_id matches the
+            # division_id of new_score. It would be better to enforce this
+            # relationship in the database
+            # Note that new_score.division_id may be NULL,
+            # while season_id must not be
+
+            if new_score.division_id is not None:
+                if new_score.score is None:
+                    raise InvalidScoreError("Missing score for non-null division.")
+
+                select_season_id = select(
+                    [league_season_division.c.league_season_id]
+                ).where(league_season_division.c.id == new_score.division_id)
+                result = await conn.execute(select_season_id)
+                row = await result.fetchone()
+                season_id_of_division = row.get("league_season_id")
+                if season_id != season_id_of_division:
+                    raise InvalidScoreError("Division id did not match season id.")
 
             upsert_sql = (
                 insert(league_season_score)

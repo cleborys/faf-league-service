@@ -3,7 +3,7 @@ import pytest
 from asynctest import CoroutineMock
 from service.league_service import LeagueService
 from service.league_service.league_service import ServiceNotReadyError
-from service.league_service.typedefs import LeagueScore
+from service.league_service.typedefs import InvalidScoreError, LeagueScore
 
 pytestmark = pytest.mark.asyncio
 
@@ -84,20 +84,16 @@ async def test_update_data(uninitialized_service):
     assert test_league.current_season_id == 2
     assert test_league.rating_type == "global"
     assert len(test_league.divisions) == 3
-    assert [division.min_rating for division in test_league.divisions] == [
-        None,
-        100,
-        200,
-    ]
+    assert [division.min_rating for division in test_league.divisions] == [0, 100, 200]
     assert [division.max_rating for division in test_league.divisions] == [
         100,
         200,
-        None,
+        3000,
     ]
     assert [division.highest_score for division in test_league.divisions] == [
         10,
         10,
-        None,
+        10,
     ]
 
 
@@ -121,7 +117,7 @@ async def test_load_score_player_does_not_exist(league_service):
 
     league_score = await league_service._load_score(non_player_id, league_season_id)
 
-    assert league_score is None
+    assert league_score == LeagueScore(None, None, 0)
 
 
 async def test_load_score_season_does_not_exist(league_service):
@@ -130,7 +126,8 @@ async def test_load_score_season_does_not_exist(league_service):
 
     league_score = await league_service._load_score(player_id, non_league_season_id)
 
-    assert league_score is None
+    # TODO maybe this should throw an exception instead?
+    assert league_score == LeagueScore(None, None, 0)
 
 
 async def test_persist_score_no_duplicate(league_service):
@@ -141,7 +138,7 @@ async def test_persist_score_no_duplicate(league_service):
     game_count = 42
     new_score = LeagueScore(division_id, score, game_count)
 
-    await league_service._persist_score(new_player_id, new_score)
+    await league_service._persist_score(new_player_id, season_id, new_score)
 
     loaded_score = await league_service._load_score(new_player_id, season_id)
     assert loaded_score == new_score
@@ -155,7 +152,31 @@ async def test_persist_score_duplicate(league_service):
     game_count = 42
     new_score = LeagueScore(division_id, score, game_count)
 
-    await league_service._persist_score(old_player_id, new_score)
+    await league_service._persist_score(old_player_id, season_id, new_score)
 
     loaded_score = await league_service._load_score(old_player_id, season_id)
     assert loaded_score == new_score
+
+
+async def test_persist_score_season_id_mismatch(league_service):
+    player_id = 1
+    wrong_season_id = 1
+    division_id = 3
+    score = 6
+    game_count = 42
+    new_score = LeagueScore(division_id, score, game_count)
+
+    with pytest.raises(InvalidScoreError):
+        await league_service._persist_score(player_id, wrong_season_id, new_score)
+
+
+async def test_persist_score_division_without_score(league_service):
+    player_id = 1
+    season_id = 2
+    division_id = 3
+    no_score = None
+    game_count = 42
+    new_score = LeagueScore(division_id, no_score, game_count)
+
+    with pytest.raises(InvalidScoreError):
+        await league_service._persist_score(player_id, season_id, new_score)
