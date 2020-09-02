@@ -83,24 +83,37 @@ async def test_update_data(uninitialized_service):
     test_league = service._leagues_by_rating_type["global"][0]
     assert test_league.current_season_id == 2
     assert test_league.rating_type == "global"
-    assert len(test_league.divisions) == 3
-    assert [division.min_rating for division in test_league.divisions] == [0, 100, 200]
+    assert len(test_league.divisions) == 6
+    assert [division.min_rating for division in test_league.divisions] == [
+        0,
+        100,
+        200,
+        300,
+        400,
+        500,
+    ]
     assert [division.max_rating for division in test_league.divisions] == [
         100,
         200,
-        3000,
+        300,
+        400,
+        500,
+        600,
     ]
     assert [division.highest_score for division in test_league.divisions] == [
         10,
         10,
         10,
+        10,
+        10,
+        100,
     ]
 
 
 async def test_load_score(league_service):
     player_id = 1
     league_season_id = 2
-    expected_division_id = 4
+    expected_division_id = 5
     expected_score = 3
     expected_game_count = 15
 

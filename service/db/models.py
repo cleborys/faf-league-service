@@ -48,6 +48,16 @@ league_season_division = Table(
     Column("id", Integer, primary_key=True),
     Column("league_season_id", Integer, ForeignKey("league_season.id")),
     Column("division_index", Integer),
+)
+
+league_season_division_subdivision = Table(
+    "league_season_division_subdivision",
+    metadata,
+    Column("id", Integer, primary_key=True),
+    Column(
+        "league_season_division_id", Integer, ForeignKey("league_season_division.id")
+    ),
+    Column("subdivision_index", Integer),
     Column("min_rating", Float),
     Column("max_rating", Float),
     Column("highest_score", Integer),
@@ -58,7 +68,9 @@ league_season_score = Table(
     metadata,
     Column("login_id", Integer, ForeignKey("login.id")),
     Column("league_season_id", Integer, ForeignKey("league_season.id")),
-    Column("division_id", Integer, ForeignKey("league_season_division.id")),
+    Column(
+        "subdivision_id", Integer, ForeignKey("league_season_division_subdivision.id")
+    ),
     Column("score", Integer),
     Column("game_count", Integer),
 )

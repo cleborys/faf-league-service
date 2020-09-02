@@ -8,7 +8,9 @@ import aiocron
 from service import config
 from service.db import FAFDatabase
 from service.db.models import (leaderboard, league, league_season,
-                               league_season_division, league_season_score)
+                               league_season_division,
+                               league_season_division_subdivision,
+                               league_season_score)
 from service.decorators import with_logger
 from service.message_queue_service import MessageQueueService, message_to_dict
 from service.metrics import league_service_backlog
@@ -50,11 +52,18 @@ class LeagueService:
         async with self._db.acquire() as conn:
             sql = (
                 select(
-                    [league_season, league, league_season_division, leaderboard],
+                    [
+                        league_season,
+                        league,
+                        league_season_division,
+                        league_season_division_subdivision,
+                        leaderboard,
+                    ],
                     use_labels=True,
                 )
                 .select_from(
-                    league_season_division.outerjoin(league_season)
+                    league_season_division_subdivision.outerjoin(league_season_division)
+                    .outerjoin(league_season)
                     .outerjoin(league)
                     .outerjoin(leaderboard)
                 )
@@ -63,6 +72,10 @@ class LeagueService:
             result = await conn.execute(sql)
             division_rows = await result.fetchall()
 
+        # The concept of subdivisions exists only in the database and client,
+        # but not in the rating service. We therefore treat every subdivision
+        # as its own, independent division, ordered lexicographically by their
+        # (division_index, subdivision_index) indices.
         divisions_by_league = defaultdict(list)
         for row in division_rows:
             divisions_by_league[row[league.c.technical_name]].append(row)
@@ -73,6 +86,7 @@ class LeagueService:
             division_list.sort(
                 key=lambda row: (
                     row[league_season_division.c.division_index],
+                    row[league_season_division_subdivision.c.subdivision_index],
                     row[league_season_division.c.id],
                 )
             )
@@ -81,10 +95,10 @@ class LeagueService:
                     league_name,
                     [
                         LeagueDivision(
-                            row[league_season_division.c.id],
-                            row[league_season_division.c.min_rating],
-                            row[league_season_division.c.max_rating],
-                            row[league_season_division.c.highest_score],
+                            row[league_season_division_subdivision.c.id],
+                            row[league_season_division_subdivision.c.min_rating],
+                            row[league_season_division_subdivision.c.max_rating],
+                            row[league_season_division_subdivision.c.highest_score],
                         )
                         for row in division_list
                     ],
@@ -142,7 +156,7 @@ class LeagueService:
             return LeagueScore(None, None, 0)
 
         return LeagueScore(
-            row[league_season_score.c.division_id],
+            row[league_season_score.c.subdivision_id],
             row[league_season_score.c.score],
             row[league_season_score.c.game_count],
         )
@@ -161,9 +175,17 @@ class LeagueService:
                 if new_score.score is None:
                     raise InvalidScoreError("Missing score for non-null division.")
 
-                select_season_id = select(
-                    [league_season_division.c.league_season_id]
-                ).where(league_season_division.c.id == new_score.division_id)
+                select_season_id = (
+                    select([league_season_division.c.league_season_id])
+                    .select_from(
+                        league_season_division_subdivision.outerjoin(
+                            league_season_division
+                        )
+                    )
+                    .where(
+                        league_season_division_subdivision.c.id == new_score.division_id
+                    )
+                )
                 result = await conn.execute(select_season_id)
                 row = await result.fetchone()
                 season_id_of_division = row.get("league_season_id")
@@ -175,12 +197,12 @@ class LeagueService:
                 .values(
                     login_id=player_id,
                     league_season_id=season_id,
-                    division_id=new_score.division_id,
+                    subdivision_id=new_score.division_id,
                     score=new_score.score,
                     game_count=new_score.game_count,
                 )
                 .on_duplicate_key_update(
-                    division_id=new_score.division_id,
+                    subdivision_id=new_score.division_id,
                     score=new_score.score,
                     game_count=new_score.game_count,
                 )
