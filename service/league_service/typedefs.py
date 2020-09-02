@@ -52,7 +52,10 @@ class League(NamedTuple):
         return None
 
     def _get_division_index(self, division_id):
-        return next((i for (i, div) in enumerate(self.divisions) if div.id == division_id), [None])
+        return next(
+            (i for (i, div) in enumerate(self.divisions) if div.id == division_id),
+            [None],
+        )
 
     def get_next_lower_division(self, division_id: int) -> Optional[int]:
         i = self._get_division_index(division_id)
@@ -70,7 +73,9 @@ class League(NamedTuple):
 
     def get_accumulated_score(self, division_id, score):
         my_division_index = self._get_division_index(division_id)
-        return score + sum(div.highest_score for div in self.divisions[:my_division_index])
+        return score + sum(
+            div.highest_score for div in self.divisions[:my_division_index]
+        )
 
     def get_highest_division(self):
         return self.divisions[-1]

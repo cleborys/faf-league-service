@@ -1,7 +1,7 @@
 import aio_pika
-import mock
 import pytest
 
+import mock
 from service import config
 from service.decorators import with_logger
 

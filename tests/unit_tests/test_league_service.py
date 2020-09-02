@@ -1,6 +1,6 @@
 import pytest
-from asynctest import CoroutineMock
 
+from asynctest import CoroutineMock
 from service.league_service import LeagueService
 from service.league_service.league_service import ServiceNotReadyError
 from service.league_service.typedefs import LeagueScore
