@@ -3,21 +3,6 @@ from sqlalchemy import (TIMESTAMP, Column, Enum, Float, ForeignKey, Integer,
 
 metadata = MetaData()
 
-login = Table(
-    "login",
-    metadata,
-    Column("id", Integer, primary_key=True),
-    Column("login", String, nullable=False, unique=True),
-    Column("password", String, nullable=False),
-    Column("email", String, nullable=False, unique=True),
-    Column("ip", String),
-    Column("steamid", Integer, unique=True),
-    Column("create_time", TIMESTAMP, nullable=False),
-    Column("update_time", TIMESTAMP, nullable=False),
-    Column("user_agent", String),
-    Column("last_login", TIMESTAMP),
-)
-
 leaderboard = Table(
     "leaderboard",
     metadata,

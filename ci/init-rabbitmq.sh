@@ -8,6 +8,6 @@ docker run --rm -d -p 5672:5672 --env-file ci/faf-rabbitmq.env --name faf-rabbit
 # Create RabbitMQ users
 docker exec faf-rabbitmq-test rabbitmqctl wait --timeout ${MAX_WAIT} "${RABBITMQ_PID_FILE}"
 
-docker exec faf-rabbitmq-test rabbitmqctl add_vhost "${RABBITMQ_LOBBYSERVER_VHOST}"
-docker exec faf-rabbitmq-test rabbitmqctl add_user "${RABBITMQ_LOBBYSERVER_USER}" "${RABBITMQ_LOBBYSERVER_PASS}"
-docker exec faf-rabbitmq-test rabbitmqctl set_permissions -p "${RABBITMQ_LOBBYSERVER_VHOST}" "${RABBITMQ_LOBBYSERVER_USER}" ".*" ".*" ".*"
+docker exec faf-rabbitmq-test rabbitmqctl add_vhost "${RABBITMQ_LEAGUE_SERVICE_VHOST}"
+docker exec faf-rabbitmq-test rabbitmqctl add_user "${RABBITMQ_LEAGUE_SERVICE_USER}" "${RABBITMQ_LEAGUE_SERVICE_PASS}"
+docker exec faf-rabbitmq-test rabbitmqctl set_permissions -p "${RABBITMQ_LEAGUE_SERVICE_VHOST}" "${RABBITMQ_LEAGUE_SERVICE_USER}" ".*" ".*" ".*"

@@ -75,10 +75,6 @@ async def test_data(request):
         async with db.acquire() as conn:
             await conn.execute(f.read())
 
-    with open("tests/data/test-league-data.sql") as f:
-        async with db.acquire() as conn:
-            await conn.execute(f.read())
-
     await db.close()
 
 
