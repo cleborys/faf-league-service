@@ -21,6 +21,6 @@ ENV VERSION=$TRAVIS_TAG
 RUN python3 -m pip install -e .
 
 # Main entrypoint and the default command that will be run
-CMD ["/usr/local/bin/python3", "service.py"]
+CMD ["scripts/entrypoint.sh"]
 
 RUN python3 -V

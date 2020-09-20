@@ -1,7 +1,7 @@
 import aio_pika
 import pytest
 
-from service.message_queue_service import MessageQueueService
+from service.message_queue_service import MessageQueueService, ConnectionAttemptFailed
 
 pytestmark = pytest.mark.asyncio
 
@@ -37,7 +37,8 @@ async def test_incorrect_port(mocker, caplog):
     mocker.patch("service.config.MQ_PORT", 1)
     service = MessageQueueService()
 
-    await service.initialize()
+    with pytest.raises(ConnectionAttemptFailed):
+        await service.initialize()
 
     expected_warning = "Unable to connect to RabbitMQ. Is it running?"
     assert expected_warning in [rec.message for rec in caplog.records]

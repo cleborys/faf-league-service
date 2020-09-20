@@ -11,25 +11,18 @@ dist: bionic
 services:
   - docker
 
-env:
-  global:
-    - FAF_DB_VERSION="v96"
-
 before_install:
-  - git clone https://github.com/FAForever/db.git faf-db
-      && pushd faf-db
-      && git checkout "${FAF_DB_VERSION}"
-      && ./ci/bootstrap.sh
-      && popd
-  - docker cp league_table_migration.sql faf-db:.
-      && docker exec faf-db sh -c "mysql -uroot -pbanana faf < league_table_migration.sql"
-  - docker exec -i faf-db mysql -uroot -pbanana faf -e "select * from login;"
+  - ./ci/bootstrap_database.sh
+  - docker exec -i faf-db mysql -uroot -pbanana faf-league -e "show tables;"
   - ./ci/init-rabbitmq.sh
   - python -m pip install pipenv
 
 install:
   - pipenv sync --dev
   - docker build --build-arg TRAVIS_TAG -t faf-league-service .
+  - pipenv run migrate-develop
+  - docker exec -i faf-db mysql -uroot -pbanana faf-league -e "select * from league;"
+
 
 script:
   - scripts/run_tests_with_coverage.sh

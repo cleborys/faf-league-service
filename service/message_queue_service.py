@@ -11,6 +11,10 @@ from service import config
 from service.decorators import with_logger
 
 
+class ConnectionAttemptFailed(ConnectionError):
+    pass
+
+
 @with_logger
 class MessageQueueService:
     def __init__(self) -> None:
@@ -33,28 +37,30 @@ class MessageQueueService:
     async def _connect(self) -> None:
         try:
             self._connection = await aio_pika.connect_robust(
-                "amqp://{user}:{password}@localhost:{port}/{vhost}".format(
+                "amqp://{user}:{password}@{host}:{port}/{vhost}".format(
                     user=config.MQ_USER,
                     password=config.MQ_PASSWORD,
-                    vhost=config.MQ_VHOST,
+                    host=config.MQ_SERVER,
                     port=config.MQ_PORT,
+                    vhost=config.MQ_VHOST,
                 ),
                 loop=asyncio.get_running_loop(),
             )
-        except ConnectionError:
+        except ConnectionError as e:
             self._logger.warning("Unable to connect to RabbitMQ. Is it running?")
-            return
-        except ProbableAuthenticationError:
+            raise ConnectionAttemptFailed from e
+        except ProbableAuthenticationError as e:
             self._logger.warning(
                 "Unable to connect to RabbitMQ. Incorrect credentials?"
             )
-            return
+            raise ConnectionAttemptFailed from e
         except Exception as e:
             self._logger.warning(
                 "Unable to connect to RabbitMQ due to unhandled excpetion %s. Incorrect vhost?",
                 e,
+                exc_info=True,
             )
-            return
+            raise ConnectionAttemptFailed from e
 
         self._channel = await self._connection.channel()
         if config.MQ_PREFETCH_COUNT:

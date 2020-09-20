@@ -1,6 +1,7 @@
 [scripts]
 devserver = "python service.py"
 tests = "scripts/run_tests_with_coverage.sh"
+migrate-develop = "scripts/migrate_develop.sh"
 vulture = "vulture service.py service/ --sort-by-size"
 
 [[source]]
@@ -15,10 +16,11 @@ aiomysql = "*"
 aio_pika = "*"
 aiocron = "*"
 prometheus_client = "*"
+yoyo-migrations = "*"
 
 [dev-packages]
 pytest = "*"
-pytest-asyncio = "*"
+pytest-asyncio = "==0.12.0"
 pytest-cov = "*"
 asynctest = "*"
 python-coveralls = "*"

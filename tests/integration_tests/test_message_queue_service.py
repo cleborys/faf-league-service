@@ -4,7 +4,7 @@ import aio_pika
 import pytest
 
 from service import config
-from service.message_queue_service import MessageQueueService, message_to_dict
+from service.message_queue_service import MessageQueueService, message_to_dict, ConnectionAttemptFailed
 
 pytestmark = pytest.mark.asyncio
 
@@ -63,7 +63,8 @@ async def test_incorrect_credentials(mocker, caplog):
     mocker.patch("service.config.MQ_PASSWORD", "bad_password")
     service = MessageQueueService()
 
-    await service.initialize()
+    with pytest.raises(ConnectionAttemptFailed):
+        await service.initialize()
     expected_warning = "Unable to connect to RabbitMQ. Incorrect credentials?"
     assert expected_warning in [rec.message for rec in caplog.records]
     caplog.clear()
@@ -88,7 +89,8 @@ async def test_incorrect_username(mocker, caplog):
     mocker.patch("service.config.MQ_USER", "bad_user")
     service = MessageQueueService()
 
-    await service.initialize()
+    with pytest.raises(ConnectionAttemptFailed):
+        await service.initialize()
 
     expected_warning = "Unable to connect to RabbitMQ. Incorrect credentials?"
     assert expected_warning in [rec.message for rec in caplog.records]
@@ -98,7 +100,8 @@ async def test_incorrect_vhost(mocker, caplog):
     mocker.patch("service.config.MQ_VHOST", "bad_vhost")
     service = MessageQueueService()
 
-    await service.initialize()
+    with pytest.raises(ConnectionAttemptFailed):
+        await service.initialize()
 
     assert any("Incorrect vhost?" in rec.message for rec in caplog.records)
 
