@@ -6,18 +6,16 @@ This is a draft of the [Forged Alliance Forever](http://www.faforever.com/) leag
 
 Install [docker](https://www.docker.com).
 
-The current state depends on a custom version of
-[faf-stack](https://github.com/FAForever/faf-stack)
-found [here](https://github.com/cleborys/faf-stack/tree/add-faf-league-service).
-
 The following assumes the db container is called `faf-db`,
 the database is called `faf-league`,
 and the root password is `banana`.
-Cloning the above repository and running `scripts/init-db.sh` will set this up.
+Cloning [faf-stack](https://github.com/FAForever/faf-stack)
+and running `scripts/init-db.sh` should set this up.
+
 
 Additionally, the service needs a running RabbitMQ server, which can be started
-via docker by running `ci/init-rabbitmq.sh`,
-which starts a RabbitMQ server on vhost `/faf-lobby`.
+via docker by running `ci/init-rabbitmq.sh`.
+This starts a RabbitMQ server on vhost `/faf-lobby`.
 
 ## Setting up for development
 
@@ -47,6 +45,12 @@ Make sure to follow the setup steps above. Then run
 
 To run the tests directly in PyCharm you need to add `--mysql_database=faf-league`
 in the Additional Arguments field in the Run Configuration.
+
+## Database migrations
+
+Database migrations are done using [yoyo](https://ollycope.com/software/yoyo).
+To migrate run `yoyo apply` from inside the `pipenv`,
+see `scripts/migrate_develop.sh` for a full example.
 
 # License
 
