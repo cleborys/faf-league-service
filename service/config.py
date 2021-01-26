@@ -23,6 +23,7 @@ MQ_PREFETCH_COUNT = int(os.getenv("MQ_PREFETCH_COUNT", 300))
 
 
 EXCHANGE_NAME = os.getenv("EXCHANGE_NAME", "faf-rabbitmq")
+QUEUE_NAME = os.getenv("QUEUE_NAME", "faf-league-service")
 LEAGUE_REQUEST_ROUTING_KEY = os.getenv(
     "LEAGUE_REQUEST_ROUTING_KEY", "success.gameResults.create"
 )
